@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DocTrace — Analysis Dashboard</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    :root{
+      --dt-bg:#faf8ff;
+      --dt-surface:#fff;
+      --dt-text:#131b2e;
+      --dt-muted:#52606d;
+      --dt-primary:#1769ff;
+      --dt-cyan:#00afd0;
+      --dt-soft:#f1f3ff;
+      --dt-border:#dfe4ef;
+      --dt-green:#dffbf4;
+      --dt-green-text:#006b58;
+      --dt-red:#ffe6e4;
+      --dt-red-text:#b42318;
+    }
+
+    html{
+      scroll-behavior:smooth;
+      background:var(--dt-bg);
+    }
+
+    body{
+      margin:0;
+      background:var(--dt-bg);
+      color:var(--dt-text);
+      font-family:Inter,sans-serif;
+      overflow-x:hidden;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .dt-header{
+      height:64px;
+      background:rgba(250,248,255,.96);
+      border-bottom:1px solid #dfe3ec;
+      display:flex;
+      align-items:center;
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(14px);
+    }
+
+    .dt-header-inner{
+      width:100%;
+      padding:0 28px;
+      display:flex;
+      align-items:center;
+      gap:24px;
+    }
+
+    .dt-brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-decoration:none;
+      color:var(--dt-text);
+      flex-shrink:0;
+    }
+
+    .dt-brand img{
+      width:34px;
+      height:34px;
+      object-fit:contain;
+    }
+
+    .dt-brand span{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+
+    .dt-nav{
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:28px;
+    }
+
+    .dt-nav a{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:14px;
+      font-weight:500;
+      color:var(--dt-text);
+      text-decoration:none;
+      white-space:nowrap;
+    }
+
+    .home-link{
+      font-weight:600;
+    }
+
+    .dt-nav a:hover,
+    .dt-nav a.active{
+      color:var(--dt-primary);
+    }
+
+    .dt-nav .upload-link{
+      font-weight:600;
+      color:var(--dt-primary);
+    }
+
+    /* =========================
+       DASHBOARD HEADER
+    ========================= */
+
+    .dash-main{
+      max-width:1600px;
+      margin:0 auto;
+      padding:34px 40px 64px;
+    }
+
+    .dash-heading{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:24px;
+      flex-wrap:wrap;
+    }
+
+    .dash-heading-left{
+      min-width:0;
+    }
+
+    .dash-kicker{
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#34536a;
+      margin-bottom:8px;
+    }
+
+    .dash-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:34px;
+      font-weight:600;
+      letter-spacing:-.035em;
+      margin:0;
+      line-height:1.15;
+    }
+
+    .dash-sub{
+      color:var(--dt-muted);
+      margin:10px 0 0;
+      font-size:15px;
+      line-height:1.45;
+    }
+
+    .dash-status-row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+      padding-top:27px;
+      flex-shrink:0;
+    }
+
+    .status{
+      font-family:'JetBrains Mono',monospace;
+      font-size:11px;
+      font-weight:600;
+      background:var(--dt-green);
+      color:var(--dt-green-text);
+      border-radius:7px;
+      padding:8px 11px;
+      white-space:nowrap;
+    }
+
+    .mode-badge{
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px;
+      font-weight:600;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      border-radius:999px;
+      padding:7px 10px;
+      background:#e9edff;
+      color:#3152a3;
+      white-space:nowrap;
+    }
+
+    /* =========================
+       METRICS
+    ========================= */
+
+    .metrics{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:16px;
+      margin-top:30px;
+    }
+
+    .metric{
+      background:#fff;
+      border:1px solid var(--dt-border);
+      border-radius:12px;
+      padding:20px 22px;
+      box-shadow:0 7px 25px rgba(19,27,46,.045);
+    }
+
+    .metric-label{
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#68758b;
+    }
+
+    .metric-value{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:23px;
+      font-weight:600;
+      margin-top:9px;
+      line-height:1.2;
+      color:var(--dt-text);
+    }
+
+    /* =========================
+       MAIN WORKSPACE
+    ========================= */
+
+    .workspace{
+      display:grid;
+      grid-template-columns:minmax(360px,.78fr) minmax(580px,1.55fr);
+      gap:24px;
+      margin-top:24px;
+      align-items:start;
+    }
+
+    .panel{
+      background:#fff;
+      border:1px solid var(--dt-border);
+      border-radius:12px;
+      box-shadow:0 8px 28px rgba(19,27,46,.05);
+      overflow:hidden;
+    }
+
+    .panel-head{
+      padding:20px 22px;
+      border-bottom:1px solid #e7eaf1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:15px;
+    }
+
+    .panel-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:600;
+      margin:0;
+    }
+
+    .mono{
+      font-family:'JetBrains Mono',monospace;
+    }
+
+    /* =========================
+       INSIGHT AUDIT
+    ========================= */
+
+    .field-card{
+      margin:18px;
+      background:#f1f3ff;
+      border-radius:9px;
+      padding:20px;
+      border:1px solid #e1e5f3;
+    }
+
+    .field-label{
+      font-family:'JetBrains Mono',monospace;
+      font-size:10px;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+      color:#647189;
+    }
+
+    .field-name{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:18px;
+      font-weight:600;
+      margin-top:8px;
+    }
+
+    .field-value{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:27px;
+      font-weight:600;
+      color:#1769ff;
+      margin-top:7px;
+    }
+
+    .confidence{
+      float:right;
+      background:#d9faf3;
+      color:#006b58;
+      border-radius:999px;
+      padding:5px 9px;
+      font:600 10px 'JetBrains Mono',monospace;
+    }
+
+    .extract{
+      margin-top:17px;
+      background:#fff;
+      border-radius:8px;
+      padding:14px 16px;
+      border:1px solid #e6e9f0;
+    }
+
+    .extract-title{
+      font:600 10px 'JetBrains Mono',monospace;
+      color:#647189;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+    }
+
+    .extract-text{
+      font-style:italic;
+      line-height:1.55;
+      margin-top:7px;
+      color:#202a3b;
+      font-size:14px;
+    }
+
+    .source-row{
+      display:flex;
+      justify-content:space-between;
+      gap:15px;
+      margin-top:15px;
+      font:500 11px 'JetBrains Mono',monospace;
+      color:#1769ff;
+    }
+
+    .side-list{
+      padding:4px 22px 22px;
+    }
+
+    .side-item{
+      padding:17px 0;
+      border-bottom:1px solid #edf0f5;
+    }
+
+    .side-item:last-child{
+      border-bottom:0;
+    }
+
+    .side-label{
+      font:500 10px 'JetBrains Mono',monospace;
+      text-transform:uppercase;
+      letter-spacing:.07em;
+      color:#68758b;
+    }
+
+    .side-value{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:17px;
+      font-weight:600;
+      margin-top:5px;
+    }
+
+    .side-note{
+      font-size:12px;
+      color:var(--dt-muted);
+      margin-top:4px;
+      line-height:1.5;
+    }
+
+    .risk{
+      border-radius:8px;
+      padding:11px 12px;
+      background:#fff4f2;
+      border:1px solid #ffd9d5;
+      color:#8f251d;
+      margin-top:12px;
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    /* =========================
+       DOCUMENT VIEWER
+    ========================= */
+
+    .viewer-panel{
+      min-width:0;
+    }
+
+    .viewer-toolbar{
+      display:flex;
+      align-items:center;
+      gap:9px;
+    }
+
+    .viewer-btn{
+      width:32px;
+      height:32px;
+      border:1px solid #d8dee9;
+      background:#fff;
+      border-radius:7px;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      color:#21304a;
+      font-size:17px;
+      font-family:'Space Grotesk',sans-serif;
+    }
+
+    .viewer-btn:hover{
+      background:#f3f5fb;
+      border-color:#b9c5d8;
+    }
+
+    .page-count{
+      font:500 10px 'JetBrains Mono',monospace;
+      background:#e9edff;
+      padding:6px 9px;
+      border-radius:6px;
+      color:#31496a;
+    }
+
+    .viewer-stage{
+      background:#eef0f8;
+      padding:30px;
+      min-height:720px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      overflow:auto;
+    }
+
+    .pdf-zoom-wrap{
+      transform-origin:top center;
+      transition:transform .18s ease;
+    }
+
+    .pdf-page{
+      width:620px;
+      min-height:790px;
+      background:#fff;
+      box-shadow:0 12px 35px rgba(30,40,70,.15);
+      padding:54px 58px;
+      color:#1c2435;
+      position:relative;
+      font-family:Georgia,'Times New Roman',serif;
+      box-sizing:border-box;
+    }
+
+    .pdf-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      border-bottom:1px solid #d8dce4;
+      padding-bottom:17px;
+      margin-bottom:25px;
+    }
+
+    .pdf-brand{
+      font:700 15px 'Space Grotesk',sans-serif;
+      letter-spacing:.01em;
+      color:#17233a;
+    }
+
+    .pdf-meta{
+      text-align:right;
+      font:10px 'JetBrains Mono',monospace;
+      color:#6d7687;
+      line-height:1.6;
+    }
+
+    .pdf-title{
+      text-align:center;
+      font:700 20px 'Space Grotesk',sans-serif;
+      letter-spacing:.02em;
+      margin-top:7px;
+    }
+
+    .pdf-subtitle{
+      text-align:center;
+      font:10px 'JetBrains Mono',monospace;
+      color:#6d7687;
+      margin-top:5px;
+      margin-bottom:30px;
+    }
+
+    .pdf-section{
+      font:700 13px 'Space Grotesk',sans-serif;
+      color:#263c62;
+      margin-bottom:18px;
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+
+    .pdf-p{
+      font-size:13px;
+      line-height:1.85;
+      margin:0 0 19px;
+    }
+
+    .highlight{
+      position:relative;
+      background:#dff2ff;
+      border-radius:4px;
+      padding:2px 4px;
+      box-decoration-break:clone;
+      -webkit-box-decoration-break:clone;
+    }
+
+    .anchor-tag{
+      position:absolute;
+      right:-4px;
+      top:-27px;
+      background:#00a8c7;
+      color:#fff;
+      font:600 10px 'JetBrains Mono',monospace;
+      padding:5px 8px;
+      border-radius:6px;
+      white-space:nowrap;
+    }
+
+    .clause-box{
+      margin:22px 0;
+      padding:15px 16px;
+      border-left:4px solid #1769ff;
+      background:#f5f7ff;
+      font-size:12px;
+      line-height:1.65;
+    }
+
+    .pdf-table{
+      width:100%;
+      border-collapse:collapse;
+      margin:19px 0 24px;
+      font-size:11px;
+    }
+
+    .pdf-table th,
+    .pdf-table td{
+      border:1px solid #d9dee8;
+      padding:8px;
+      text-align:left;
+    }
+
+    .pdf-table th{
+      background:#f1f3f8;
+      font-family:'JetBrains Mono',monospace;
+      font-size:9px;
+      text-transform:uppercase;
+    }
+
+    .pdf-footer{
+      position:absolute;
+      bottom:25px;
+      left:58px;
+      right:58px;
+      border-top:1px solid #e0e3ea;
+      padding-top:9px;
+      display:flex;
+      justify-content:space-between;
+      font:9px 'JetBrains Mono',monospace;
+      color:#7a8291;
+    }
+
+    /* =========================
+       ASK DOCTRACE
+    ========================= */
+
+    .chat-panel{
+      margin-top:24px;
+    }
+
+    .chat-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:20px 28px;
+      border-bottom:1px solid #e7eaf1;
+    }
+
+    .chat-title{
+      font:600 20px 'Space Grotesk',sans-serif;
+      margin:0;
+    }
+
+    .chat-sub{
+      font-size:13px;
+      color:var(--dt-muted);
+      margin-top:5px;
+      line-height:1.5;
+    }
+
+    .chat-log{
+      min-height:190px;
+      max-height:380px;
+      overflow-y:auto;
+      padding:20px 28px;
+      background:#fbfbff;
+    }
+
+    .chat-msg{
+      display:flex;
+      margin-bottom:14px;
+    }
+
+    .chat-msg.user{
+      justify-content:flex-end;
+    }
+
+    .chat-bubble{
+      max-width:78%;
+      padding:12px 14px;
+      border-radius:10px;
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .chat-msg.user .chat-bubble{
+      background:#eef1ff;
+      color:var(--dt-text);
+    }
+
+    .chat-msg.assistant .chat-bubble{
+      background:#fff;
+      border:1px solid #e1e5ef;
+      color:var(--dt-text);
+    }
+
+    .chat-evidence{
+      margin-top:9px;
+      padding-top:9px;
+      border-top:1px solid #e6e9f0;
+      font:500 10px/1.5 'JetBrains Mono',monospace;
+      color:#1769ff;
+    }
+
+    .chat-suggestions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      padding:14px 28px 16px;
+      background:#fff;
+      border-top:1px solid #e7eaf1;
+    }
+
+    .chat-chip{
+      border:1px solid #dfe4ef;
+      background:#f8f9fd;
+      border-radius:999px;
+      padding:8px 11px;
+      font:500 10px 'JetBrains Mono',monospace;
+      color:#40506a;
+      cursor:pointer;
+      transition:.15s ease;
+    }
+
+    .chat-chip:hover{
+      background:#eef1ff;
+      color:#1769ff;
+      border-color:#cbd5ff;
+    }
+
+    .chat-chip:active{
+      transform:translateY(1px);
+    }
+
+    .chat-input-row{
+      display:flex;
+      gap:10px;
+      padding:16px 28px;
+      border-top:1px solid #e7eaf1;
+      background:#fff;
+    }
+
+    .chat-input{
+      flex:1;
+      border:1px solid #d8dee9;
+      border-radius:8px;
+      padding:11px 12px;
+      font:400 13px Inter,sans-serif;
+      outline:none;
+    }
+
+    .chat-input:focus{
+      border-color:#1769ff;
+      box-shadow:0 0 0 3px rgba(23,105,255,.08);
+    }
+
+    .chat-send{
+      border:0;
+      border-radius:8px;
+      background:#1769ff;
+      color:#fff;
+      padding:0 20px;
+      font:600 13px 'Space Grotesk',sans-serif;
+      cursor:pointer;
+      min-width:74px;
+    }
+
+    .chat-send:hover{
+      background:#0f5de5;
+    }
+
+    .chat-send:disabled{
+      opacity:.65;
+      cursor:wait;
+    }
+
+    /* =========================
+       BOTTOM CARDS
+    ========================= */
+
+    .evidence-bottom{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+      margin-top:20px;
+    }
+
+    .evidence-card{
+      background:#fff;
+      border:1px solid var(--dt-border);
+      border-radius:10px;
+      padding:18px;
+    }
+
+    .evidence-card h3{
+      font:600 16px 'Space Grotesk',sans-serif;
+      margin:0 0 8px;
+    }
+
+    .evidence-card p{
+      font-size:13px;
+      line-height:1.6;
+      color:var(--dt-muted);
+      margin:0;
+    }
+
+    .raw{
+      margin-top:24px;
+      background:#101727;
+      color:#eaf1ff;
+      border-radius:10px;
+      padding:17px;
+      overflow:auto;
+      font:12px/1.6 'JetBrains Mono',monospace;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media(max-width:1100px){
+      .workspace{
+        grid-template-columns:1fr;
+      }
+
+      .metrics{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .dt-nav{
+        gap:16px;
+      }
+
+      .dash-main{
+        padding-left:24px;
+        padding-right:24px;
+      }
+    }
+
+    @media(max-width:760px){
+      .dt-nav{
+        display:none;
+      }
+
+      .dash-main{
+        padding:24px 14px 45px;
+      }
+
+      .metrics{
+        grid-template-columns:1fr;
+      }
+
+      .viewer-stage{
+        padding:16px;
+        min-height:560px;
+      }
+
+      .pdf-page{
+        width:560px;
+      }
+
+      .evidence-bottom{
+        grid-template-columns:1fr;
+      }
+
+      .dash-status-row{
+        padding-top:0;
+      }
+
+      .chat-head,
+      .chat-input-row,
+      .chat-suggestions{
+        padding-left:16px;
+        padding-right:16px;
+      }
+
+      .chat-log{
+        padding-left:16px;
+        padding-right:16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- =========================
+       NAVIGATION
+  ========================= -->
+
+  <header class="dt-header">
+    <div class="dt-header-inner">
+
+      <a class="dt-brand" href="index.html" aria-label="DocTrace home">
+        <img
+          src="https://lh3.googleusercontent.com/aida/AEtjO1WUgYlPjItGfVt-0giOjk-p1J77KaHgJXxIxo6qIppfTVG_eDYMgq48xw8NOoHC3ePByNNWQ_PgvYRkB798-Y73z5LUlmzHV_raXrytozxvMO5mwVt9hO70eoYN-8uwuHLf2m987oWTv8ll7ww9-AadYrocxiomA4CB3wiKkPq2BrJ1o8xEVbZwLLFgNh7YP1d-JhFQxMlusAlxaFtSLkfFZFfFSjrYp0BHTlLm09ujT-F2EF6F0zVg4Cyv"
+          alt="DocTrace logo"
+        >
+        <span>DocTrace</span>
+      </a>
+
+      <nav class="dt-nav" aria-label="Primary navigation">
+        <a class="home-link" href="index.html">Home</a>
+        <a href="index.html#upload-workspace">Product</a>
+        <a href="index.html#solutions">Solutions</a>
+        <a href="index.html#evidence-viewer">Evidence Engine</a>
+        <a href="index.html#how-it-works">How It Works</a>
+        <a href="index.html#documentation">Documentation</a>
+        <a class="upload-link" href="upload.html">Upload Document</a>
+        <a href="dashboard.html">Dashboard</a>
+      </nav>
+
+    </div>
+  </header>
+
+
+  <main class="dash-main">
+
+    <!-- =========================
+         DASHBOARD TITLE
+    ========================= -->
+
+    <div class="dash-heading">
+
+      <div class="dash-heading-left">
+
+        <div class="dash-kicker">
+          DOCUMENT ANALYSIS / EVIDENCE REVIEW
+        </div>
+
+        <h1 class="dash-title">
+          Trace every extracted insight.
+        </h1>
+
+        <p class="dash-sub" id="documentFileName">
+          Master_Service_Agreement_Acme.pdf
+        </p>
+
+      </div>
+
+      <div class="dash-status-row">
+
+        <span id="modeBadge" class="mode-badge">
+          DEMO MODE
+        </span>
+
+        <span id="analysisStatus" class="status">
+          ● ANALYSIS COMPLETE
+        </span>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         SUMMARY METRICS
+    ========================= -->
+
+    <section class="metrics" aria-label="Document summary">
+
+      <article class="metric">
+        <div class="metric-label">
+          Document type
+        </div>
+
+        <div id="documentType" class="metric-value">
+          Contract
+        </div>
+      </article>
+
+
+      <article class="metric">
+        <div class="metric-label">
+          Payment deadline
+        </div>
+
+        <div id="paymentDeadline" class="metric-value">
+          30 days
+        </div>
+      </article>
+
+
+      <article class="metric">
+        <div class="metric-label">
+          Amount
+        </div>
+
+        <div id="amount" class="metric-value">
+          ₹4,50,000
+        </div>
+      </article>
+
+
+      <article class="metric">
+        <div class="metric-label">
+          Analysis confidence
+        </div>
+
+        <div id="confidence" class="metric-value">
+          94%
+        </div>
+      </article>
+
+    </section>
+
+
+    <!-- =========================
+         WORKSPACE
+    ========================= -->
+
+    <section class="workspace">
+
+      <!-- INSIGHT AUDIT -->
+
+      <aside class="panel">
+
+        <div class="panel-head">
+
+          <div>
+
+            <h2 class="panel-title">
+              Insight Audit
+            </h2>
+
+            <div
+              class="mono"
+              style="font-size:10px;color:#68758b;margin-top:4px"
+            >
+              ID:
+              <span id="auditId">#DT-042</span>
+            </div>
+
+          </div>
+
+          <div
+            class="mono"
+            style="font-size:10px;color:#68758b"
+          >
+            PAGE
+            <span id="pageNumber">7</span>
+          </div>
+
+        </div>
+
+
+        <div class="field-card">
+
+          <span class="confidence" id="confidenceBadge">
+            ● 94% confidence
+          </span>
+
+          <div class="field-label">
+            Extracted field
+          </div>
+
+          <div class="field-name">
+            Payment Deadline
+          </div>
+
+          <div class="field-value" id="deadlineLarge">
+            30 days (Net 30)
+          </div>
+
+
+          <div class="extract">
+
+            <div class="extract-title">
+              Exact clause extract
+            </div>
+
+            <div class="extract-text" id="sourceText">
+              “The purchaser shall make payment within 30 days of receiving the invoice issued upon milestone acceptance.”
+            </div>
+
+          </div>
+
+
+          <div class="source-row">
+
+            <span>
+              ⌖ Page
+              <span id="sourcePage">7</span>
+              • Section 4.2
+            </span>
+
+            <span>
+              Source evidence
+            </span>
+
+          </div>
+
+        </div>
+
+
+        <div class="side-list">
+
+          <div class="side-item">
+
+            <div class="side-label">
+              Financial value
+            </div>
+
+            <div class="side-value" id="amountSide">
+              ₹4,50,000
+            </div>
+
+            <div class="side-note">
+              Payment amount identified in the agreement.
+            </div>
+
+          </div>
+
+
+          <div class="side-item">
+
+            <div class="side-label">
+              Obligation
+            </div>
+
+            <div class="side-value">
+              Payment within 30 days
+            </div>
+
+            <div class="side-note">
+              Linked to the highlighted source clause on page 7.
+            </div>
+
+          </div>
+
+
+          <div class="side-item">
+
+            <div class="side-label">
+              Risk / anomaly
+            </div>
+
+            <div class="risk">
+              <strong>Review required</strong>
+              <br>
+              Late-payment terms should be checked against the extracted payment obligation.
+            </div>
+
+          </div>
+
+        </div>
+
+      </aside>
+
+
+      <!-- DOCUMENT VIEWER -->
+
+      <section
+        class="panel viewer-panel"
+        id="evidence-viewer"
+      >
+
+        <div class="panel-head">
+
+          <div class="d-flex align-items-center gap-3 min-w-0">
+
+            <div style="font-size:22px">
+              ▣
+            </div>
+
+            <div
+              class="panel-title"
+              id="viewerFileName"
+            >
+              Master_Service_Agreement_Acme.pdf
+            </div>
+
+            <span class="page-count">
+              Page
+              <span id="viewerPage">7</span>
+              of 18
+            </span>
+
+          </div>
+
+
+          <div
+            class="viewer-toolbar"
+            aria-label="Document controls"
+          >
+
+            <button
+              class="viewer-btn"
+              id="zoomIn"
+              title="Zoom in"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
+
+            <button
+              class="viewer-btn"
+              id="zoomOut"
+              title="Zoom out"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+
+            <button
+              class="viewer-btn"
+              id="zoomReset"
+              title="Reset zoom"
+              aria-label="Reset zoom"
+            >
+              ↺
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="viewer-stage"
+          id="viewerStage"
+        >
+
+          <div
+            class="pdf-zoom-wrap"
+            id="pdfZoomWrap"
+          >
+
+            <article
+              class="pdf-page"
+              aria-label="Document page preview"
+            >
+
+              <div class="pdf-top">
+
+                <div class="pdf-brand">
+                  NORTHSTAR PROFESSIONAL SERVICES
+                </div>
+
+                <div class="pdf-meta">
+                  VENDOR SERVICE AGREEMENT
+                  <br>
+                  Agreement No. NSA-2026-017
+                  <br>
+                  Effective: 04 September 2026
+                </div>
+
+              </div>
+
+
+              <div class="pdf-title">
+                SERVICE FEES &amp; PAYMENT TERMS
+              </div>
+
+              <div class="pdf-subtitle">
+                Commercial Agreement • Schedule B • Page 7 of 18
+              </div>
+
+
+              <div class="pdf-section">
+                4. Compensation and Payment Schedule
+              </div>
+
+
+              <p class="pdf-p">
+                The Customer shall pay the Provider the professional service
+                fees specified in this agreement in accordance with the
+                deliverables and milestone acceptance protocol.
+              </p>
+
+
+              <p class="pdf-p">
+                <strong>4.1 Service Fees.</strong>
+                The total contract value for the services described herein is
+                <strong>₹4,50,000</strong>, exclusive of applicable taxes
+                unless otherwise stated.
+              </p>
+
+
+              <p class="pdf-p">
+
+                <strong>4.2 Invoicing and Payment Terms.</strong>
+
+                All invoices shall be transmitted digitally.
+
+                <span
+                  class="highlight"
+                  id="pdfHighlight"
+                >
+                  The purchaser shall make payment within 30 days of receiving
+                  the invoice
+
+                  <span class="anchor-tag">
+                    ⌖ Evidence linked
+                  </span>
+
+                </span>
+
+                duly submitted upon milestone acceptance.
+
+              </p>
+
+
+              <div class="clause-box">
+
+                <strong>
+                  Traceable obligation:
+                </strong>
+
+                Payment deadline = 30 days from receipt of the invoice.
+
+                DocTrace links this extracted value to the source page and
+                clause instead of presenting it as an unsupported summary.
+
+              </div>
+
+
+              <table class="pdf-table">
+
+                <thead>
+
+                  <tr>
+                    <th>Item</th>
+                    <th>Extracted value</th>
+                    <th>Source</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  <tr>
+                    <td>Contract value</td>
+                    <td id="pdfAmount">₹4,50,000</td>
+                    <td>Section 4.1</td>
+                  </tr>
+
+                  <tr>
+                    <td>Payment term</td>
+                    <td id="pdfDeadline">Net 30</td>
+                    <td>Section 4.2</td>
+                  </tr>
+
+                </tbody>
+
+              </table>
+
+
+              <p class="pdf-p">
+
+                <strong>4.3 Taxes.</strong>
+
+                Applicable taxes, duties, and statutory levies shall be
+                calculated at the prevailing rates for the jurisdiction
+                of performance.
+
+              </p>
+
+
+              <div class="pdf-footer">
+
+                <span>
+                  DocTrace evidence preview • source page 7
+                </span>
+
+                <span>
+                  7 / 18
+                </span>
+
+              </div>
+
+            </article>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </section>
+
+
+    <!-- =========================
+         ASK DOCTRACE
+    ========================= -->
+
+    <section
+      class="panel chat-panel"
+      id="ask-doctrace"
+    >
+
+      <div class="chat-head">
+
+        <div>
+
+          <h2 class="chat-title">
+            Ask DocTrace
+          </h2>
+
+          <div
+            class="chat-sub"
+            id="chatSubtitle"
+          >
+            Ask questions about the demo document. Answers are grounded
+            in the displayed analysis and evidence.
+          </div>
+
+        </div>
+
+        <span class="mode-badge">
+          AI ANALYSIS
+        </span>
+
+      </div>
+
+
+      <div
+        class="chat-log"
+        id="chatLog"
+        aria-live="polite"
+      >
+
+        <div class="chat-msg assistant">
+
+          <div class="chat-bubble">
+
+            <strong>DocTrace:</strong>
+
+            I can analyze the document shown here. Ask me about payment
+            terms, amounts, obligations, deadlines, risks, or the
+            highlighted evidence.
+
+            <div class="chat-evidence">
+              DEMO EVIDENCE • PAGE 7 • SECTION 4.2
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CLICKING THESE NOW AUTOMATICALLY SENDS THE QUESTION -->
+
+      <div class="chat-suggestions">
+
+        <button
+          class="chat-chip"
+          type="button"
+          data-question="What is the payment deadline?"
+        >
+          What is the payment deadline?
+        </button>
+
+        <button
+          class="chat-chip"
+          type="button"
+          data-question="What financial amount was identified?"
+        >
+          What financial amount was identified?
+        </button>
+
+        <button
+          class="chat-chip"
+          type="button"
+          data-question="What are the key obligations?"
+        >
+          What are the key obligations?
+        </button>
+
+        <button
+          class="chat-chip"
+          type="button"
+          data-question="What should I review in this document?"
+        >
+          What should I review?
+        </button>
+
+      </div>
+
+
+      <div class="chat-input-row">
+
+        <input
+          id="chatInput"
+          class="chat-input"
+          type="text"
+          placeholder="Ask about this document..."
+          autocomplete="off"
+        >
+
+        <button
+          id="chatSend"
+          class="chat-send"
+          type="button"
+        >
+          Ask
+        </button>
+
+      </div>
+
+    </section>
+
+
+    <!-- =========================
+         EVIDENCE INFORMATION
+    ========================= -->
+
+    <section class="evidence-bottom">
+
+      <article class="evidence-card">
+
+        <h3>
+          Why this result was extracted
+        </h3>
+
+        <p>
+          DocTrace identifies the document type, financial values,
+          deadlines, obligations, and potential review items, then keeps
+          each insight tied to source text and page information.
+        </p>
+
+      </article>
+
+
+      <article class="evidence-card">
+
+        <h3>
+          Evidence status
+        </h3>
+
+        <p id="evidenceStatus">
+          Payment deadline is anchored to page 7, Section 4.2.
+          Review the highlighted clause before relying on the extracted value.
+        </p>
+
+      </article>
+
+    </section>
+
+
+    <!-- =========================
+         RAW API RESPONSE
+    ========================= -->
+
+    <details style="margin-top:20px">
+
+      <summary
+        class="mono"
+        style="cursor:pointer;font-size:11px;color:#53627a"
+      >
+        VIEW RAW API RESPONSE
+      </summary>
+
+      <pre
+        id="rawResult"
+        class="raw"
+      >No live API result yet. Showing the DocTrace demo analysis.</pre>
+
+    </details>
+
+  </main>
+
+
+  <script src="js/app.js"></script>
+
+</body>
+</html>

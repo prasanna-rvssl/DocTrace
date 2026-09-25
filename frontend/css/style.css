@@ -1,0 +1,199 @@
+/* =========================================================
+   DocTrace shared styles
+   Plain HTML + Bootstrap + JavaScript
+   ========================================================= */
+
+html {
+  scroll-behavior: smooth;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+body {
+  min-height: 100vh;
+  height: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: auto !important;
+}
+
+/* Never let an old stylesheet accidentally lock the page. */
+html,
+body,
+main {
+  max-height: none !important;
+}
+
+header {
+  left: 0;
+  right: 0;
+}
+
+section[id] {
+  scroll-margin-top: 88px;
+}
+
+.nav-link-work {
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+
+/* Keep the main page scrollbar visible so the user knows the page scrolls. */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f2f3ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bcc9cd;
+  border-radius: 10px;
+}
+
+/* Upload page */
+.upload-page {
+  min-height: 100vh;
+  background: #faf8ff;
+}
+
+.upload-card,
+.dashboard-card {
+  background: #ffffff;
+  border: 1px solid #e1e5ee;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(19, 27, 46, 0.06);
+}
+
+.drop-zone {
+  border: 2px dashed #bcc9cd;
+  border-radius: 16px;
+  background: #faf8ff;
+  transition: 0.2s ease;
+}
+
+.drop-zone.dragover {
+  border-color: #00687b;
+  background: #eafcff;
+  transform: translateY(-1px);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-ready {
+  background: #dffbf4;
+  color: #006b58;
+}
+
+.status-processing {
+  background: #e7f7ff;
+  color: #00687b;
+}
+
+.status-error {
+  background: #ffe8e6;
+  color: #a51d1d;
+}
+
+.metric-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.evidence-box {
+  background: #f7f8ff;
+  border-left: 4px solid #00b8d9;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.risk-card {
+  border: 1px solid #e1e5ee;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #dce5e8;
+  border-top-color: #00687b;
+  border-radius: 50%;
+  animation: dt-spin 0.8s linear infinite;
+}
+
+@keyframes dt-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 1023px) {
+  header nav {
+    display: none !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .display-lg,
+  .text-display-lg {
+    font-size: 38px !important;
+    line-height: 44px !important;
+  }
+}
+
+/* Real upload / backend status */
+.upload-status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.upload-status.info {
+  background: #eef3ff;
+  color: #283044;
+}
+
+.upload-status.processing {
+  background: #e7f7ff;
+  color: #00687b;
+}
+
+.upload-status.success {
+  background: #e4faf4;
+  color: #006b58;
+}
+
+.upload-status.error {
+  background: #ffe9e7;
+  color: #a51d1d;
+}
+
+#drop-area.dragover,
+#uploadDropZone.dragover {
+  outline: 2px solid #00b8d9;
+  background: #eafcff !important;
+}
+
+#drop-area {
+  min-height: 240px;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
