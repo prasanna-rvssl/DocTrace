@@ -1,65 +1,170 @@
-import re
-from collections import defaultdict
-
-
-def _amount_number(value):
-    digits = re.sub(r"[^0-9.]", "", str(value or ""))
-    try:
-        return float(digits) if digits else None
-    except ValueError:
-        return None
-
-
-def _risk(kind, title, severity, description, item):
-    return {
-        "type": kind,
-        "title": title,
-        "severity": severity,
-        "description": description,
-        "page": item.get("page"),
-        "section": item.get("section"),
-        "source_text": item.get("source_text", ""),
-    }
-
-
 def detect_anomalies(extractions):
-    """Flag only repeated, semantically comparable values and explicit arithmetic totals."""
+    """
+    Detect only meaningful potential inconsistencies
+    in extracted document information.
+    """
+
     risks = []
-    grouped = defaultdict(list)
+
+    # Ignore empty or invalid extractions
+    valid_items = []
+
     for item in extractions:
-        if not isinstance(item, dict) or not item.get("value"):
+
+        if not isinstance(item, dict):
             continue
-        if item.get("type") in {"start_date", "end_date", "renewal_date", "contract_value", "payment_amount"}:
-            grouped[item["type"]].append(item)
 
-    for field_type, items in grouped.items():
-        distinct = {str(item["value"]).casefold() for item in items}
-        if len(distinct) > 1:
-            label = items[0].get("label", field_type.replace("_", " "))
-            risks.append(_risk(
-                "conflicting_information",
-                f"Potentially conflicting {label.lower()}",
-                "medium",
-                "More than one value was found for this field. Review the source clauses to confirm whether they conflict.",
-                items[-1],
-            ))
+        value = item.get("value")
+        source_text = item.get("source_text")
 
-    amounts = defaultdict(list)
-    for item in extractions:
-        if item.get("type") in {"subtotal", "tax_amount", "total_amount"}:
-            amount = _amount_number(item.get("value"))
-            if amount is not None:
-                amounts[item["type"]].append((amount, item))
-    if all(kind in amounts for kind in ("subtotal", "tax_amount", "total_amount")):
-        subtotal, _ = amounts["subtotal"][-1]
-        tax, _ = amounts["tax_amount"][-1]
-        total, item = amounts["total_amount"][-1]
-        if abs((subtotal + tax) - total) > 0.01:
-            risks.append(_risk(
-                "calculation_inconsistency",
-                "Potential calculation inconsistency",
-                "high",
-                f"The listed subtotal plus tax is {subtotal + tax:,.2f}, while the listed total is {total:,.2f}. Review the figures and source lines.",
-                item,
-            ))
+        if not value or not source_text:
+            continue
+
+        valid_items.append(item)
+
+    # Group extractions by meaningful type
+    grouped = {}
+
+    for item in valid_items:
+
+        item_type = item.get(
+            "type",
+            ""
+        ).lower().strip()
+
+        # Ignore generic AI types
+        if item_type in [
+            "",
+            "string",
+            "information"
+        ]:
+            continue
+
+        grouped.setdefault(
+            item_type,
+            []
+        ).append(item)
+
+    # Detect genuinely different values
+    # for the same meaningful field.
+    for item_type, items in grouped.items():
+
+        values = set()
+
+        for item in items:
+
+            value = str(
+                item.get("value", "")
+            ).strip().lower()
+
+            if value:
+                values.add(value)
+
+        if len(values) <= 1:
+            continue
+
+        # Only flag fields where conflicting
+        # values are actually meaningful.
+        allowed_conflict_types = [
+            "date",
+            "deadline",
+            "payment_deadline",
+            "financial_amount",
+            "payment_amount",
+            "payment_terms"
+        ]
+
+        if item_type not in allowed_conflict_types:
+            continue
+
+        first_item = items[0]
+
+        risks.append({
+            "type": "conflicting_information",
+
+            "title": (
+                "Potential Conflicting "
+                "Information"
+            ),
+
+            "severity": "medium",
+
+            "description": (
+                f"Multiple different values were "
+                f"detected for "
+                f"{item_type.replace('_', ' ')}. "
+                f"Review the referenced clauses."
+            ),
+
+            "page": first_item.get(
+                "page"
+            ),
+
+            "source_text": first_item.get(
+                "source_text",
+                ""
+            )
+        })
+
+    # Check low-confidence items,
+    # but only when they contain real evidence.
+    for item in valid_items:
+
+        confidence = item.get(
+            "confidence",
+            1.0
+        )
+
+        try:
+            confidence = float(
+                confidence
+            )
+        except (
+            TypeError,
+            ValueError
+        ):
+            confidence = 1.0
+
+        if confidence >= 0.60:
+            continue
+
+        item_type = item.get(
+            "type",
+            ""
+        ).lower().strip()
+
+        # Ignore generic AI categories.
+        if item_type in [
+            "",
+            "string",
+            "information"
+        ]:
+            continue
+
+        risks.append({
+            "type": "low_confidence_extraction",
+
+            "title": (
+                "Information Requires Review"
+            ),
+
+            "severity": "low",
+
+            "description": (
+                "This information was extracted "
+                "with relatively low confidence "
+                "and should be reviewed against "
+                "the original document."
+            ),
+
+            "page": item.get(
+                "page"
+            ),
+
+            "source_text": item.get(
+                "source_text",
+                ""
+            )
+        })
+
     return risks
