@@ -354,10 +354,10 @@
 
       <nav class="upload-nav-links" aria-label="Main navigation">
         <a class="home-link" href="index.html">Home</a>
-        <a href="index.html#upload-workspace">Product</a>
-        <a href="index.html#solutions">Solutions</a>
-        <a href="index.html#evidence-viewer">Evidence Engine</a>
         <a href="index.html#how-it-works">How It Works</a>
+        <a href="index.html#evidence-viewer">Evidence Engine</a>
+        <a href="index.html#risk-review">Risk Review</a>
+        <a href="index.html#product">Ask DocTrace</a>
         <a href="index.html#documentation">Documentation</a>
         <a class="upload-current" href="upload.html">Upload Document</a>
         <a class="dashboard-link" href="dashboard.html">Dashboard</a>
@@ -370,7 +370,7 @@
       <div class="upload-heading">
         <div class="upload-eyebrow">Document Analysis</div>
         <h1>Upload a document.<br><span>Trace every insight.</span></h1>
-        <p>Upload a PDF and let DocTrace analyze deadlines, financial values, obligations, risks, and supporting evidence through the FastAPI analysis pipeline.</p>
+        <p>Upload a text-based PDF and DocTrace will extract dates, financial values, obligation-like clauses, and selected review flags with source pages. Scanned image-only PDFs are not supported yet.</p>
       </div>
 
       <section class="upload-card-home" aria-label="PDF upload">
@@ -407,9 +407,11 @@
 
         <div id="uploadStatus" class="upload-status-home" hidden></div>
       </section>
+      <p class="small text-secondary mt-3">DocTrace is an automated review aid, not legal advice. Extraction and rule-based checks can miss or misread content. Confidence scores are heuristic estimates, not calibrated probabilities. Verify results in the original PDF and consult a qualified lawyer for legal decisions. Do not upload confidential documents; this demo has no user accounts or document deletion control.</p>
     </div>
   </main>
 
+  <script src="js/config.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

@@ -357,6 +357,16 @@
       padding:4px 22px 22px;
     }
 
+    .extraction-list{padding:0 22px 18px}
+    .extraction-list h3{font:600 11px 'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em;color:#68758b;margin:0 0 8px}
+    .extraction-items{display:grid;gap:6px;max-height:230px;overflow:auto}
+    .extraction-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid #edf0f5;border-radius:7px;background:#fff;padding:8px 10px;text-align:left;cursor:pointer}
+    .extraction-row:hover{border-color:#7ba7ff;background:#f7faff}
+    .extraction-main{min-width:0}
+    .extraction-label{display:block;color:#68758b;font:500 9px 'JetBrains Mono',monospace;text-transform:uppercase}
+    .extraction-value{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#21304a;font-size:12px;margin-top:2px}
+    .extraction-page{flex:none;color:#1769ff;font:500 9px 'JetBrains Mono',monospace}
+
     .side-item{
       padding:17px 0;
       border-bottom:1px solid #edf0f5;
@@ -397,6 +407,11 @@
       font-size:12px;
       line-height:1.5;
     }
+
+    .risk-evidence{display:block;width:100%;border:0;border-bottom:1px solid rgba(143,37,29,.15);background:transparent;color:inherit;text-align:left;padding:6px 0;cursor:pointer;font:inherit}
+    .risk-evidence:last-child{border-bottom:0}
+    .risk-evidence span{display:block;margin-top:4px;font:500 9px 'JetBrains Mono',monospace}
+    .risk-evidence:hover{text-decoration:underline}
 
     /* =========================
        DOCUMENT VIEWER
@@ -853,10 +868,10 @@
 
       <nav class="dt-nav" aria-label="Primary navigation">
         <a class="home-link" href="index.html">Home</a>
-        <a href="index.html#upload-workspace">Product</a>
-        <a href="index.html#solutions">Solutions</a>
-        <a href="index.html#evidence-viewer">Evidence Engine</a>
         <a href="index.html#how-it-works">How It Works</a>
+        <a href="index.html#evidence-viewer">Evidence Engine</a>
+        <a href="index.html#risk-review">Risk Review</a>
+        <a href="index.html#product">Ask DocTrace</a>
         <a href="index.html#documentation">Documentation</a>
         <a class="upload-link" href="upload.html">Upload Document</a>
         <a href="dashboard.html">Dashboard</a>
@@ -912,45 +927,40 @@
     <section class="metrics" aria-label="Document summary">
 
       <article class="metric">
+        <div class="metric-label">Deadlines</div>
+        <div id="deadlineCount" class="metric-value">—</div>
+      </article>
+
+
+      <article class="metric">
         <div class="metric-label">
-          Document type
+          Financial values
         </div>
 
-        <div id="documentType" class="metric-value">
-          Contract
+        <div id="financialValueCount" class="metric-value">
+          —
         </div>
       </article>
 
 
       <article class="metric">
         <div class="metric-label">
-          Payment deadline
+          Obligations
         </div>
 
-        <div id="paymentDeadline" class="metric-value">
-          30 days
-        </div>
-      </article>
-
-
-      <article class="metric">
-        <div class="metric-label">
-          Amount
-        </div>
-
-        <div id="amount" class="metric-value">
-          ₹4,50,000
+        <div id="obligationCount" class="metric-value">
+          —
         </div>
       </article>
 
 
       <article class="metric">
         <div class="metric-label">
-          Analysis confidence
+          Risk flags
         </div>
 
-        <div id="confidence" class="metric-value">
-          94%
+        <div id="riskCount" class="metric-value">
+          —
         </div>
       </article>
 
@@ -999,19 +1009,19 @@
         <div class="field-card">
 
           <span class="confidence" id="confidenceBadge">
-            ● 94% confidence
+            Rule-based estimate
           </span>
 
-          <div class="field-label">
+          <div class="field-label" id="primaryFieldLabel">
             Extracted field
           </div>
 
-          <div class="field-name">
+          <div class="field-name" id="primaryFieldName">
             Payment Deadline
           </div>
 
           <div class="field-value" id="deadlineLarge">
-            30 days (Net 30)
+            within 30 days
           </div>
 
 
@@ -1022,7 +1032,7 @@
             </div>
 
             <div class="extract-text" id="sourceText">
-              “The purchaser shall make payment within 30 days of receiving the invoice issued upon milestone acceptance.”
+              “The purchaser shall make payment within 30 days of receiving the invoice duly submitted upon milestone acceptance.”
             </div>
 
           </div>
@@ -1033,7 +1043,7 @@
             <span>
               ⌖ Page
               <span id="sourcePage">7</span>
-              • Section 4.2
+              • Section <span id="sourceSection">—</span>
             </span>
 
             <span>
@@ -1043,6 +1053,12 @@
           </div>
 
         </div>
+
+
+        <section class="extraction-list" aria-label="Extracted evidence">
+          <h3>Evidence map · click to open page</h3>
+          <div class="extraction-items" id="extractionResults"></div>
+        </section>
 
 
         <div class="side-list">
@@ -1058,7 +1074,7 @@
             </div>
 
             <div class="side-note">
-              Payment amount identified in the agreement.
+            <span id="amountSourceNote">Source evidence from the analyzed PDF.</span>
             </div>
 
           </div>
@@ -1070,12 +1086,12 @@
               Obligation
             </div>
 
-            <div class="side-value">
+            <div class="side-value" id="obligationSide">
               Payment within 30 days
             </div>
 
             <div class="side-note">
-              Linked to the highlighted source clause on page 7.
+              <span id="obligationSourceNote">Source linked to the analyzed PDF.</span>
             </div>
 
           </div>
@@ -1087,7 +1103,7 @@
               Risk / anomaly
             </div>
 
-            <div class="risk">
+            <div class="risk" id="riskDetails">
               <strong>Review required</strong>
               <br>
               Late-payment terms should be checked against the extracted payment obligation.
@@ -1125,7 +1141,7 @@
             <span class="page-count">
               Page
               <span id="viewerPage">7</span>
-              of 18
+              of <span id="pdfPageCount">—</span>
             </span>
 
           </div>
@@ -1135,6 +1151,24 @@
             class="viewer-toolbar"
             aria-label="Document controls"
           >
+
+            <button
+              class="viewer-btn"
+              id="pdfPrevPage"
+              title="Previous page"
+              aria-label="Previous PDF page"
+            >
+              ‹
+            </button>
+
+            <button
+              class="viewer-btn"
+              id="pdfNextPage"
+              title="Next page"
+              aria-label="Next PDF page"
+            >
+              ›
+            </button>
 
             <button
               class="viewer-btn"
@@ -1166,166 +1200,11 @@
           </div>
 
         </div>
-
-
-        <div
-          class="viewer-stage"
-          id="viewerStage"
-        >
-
-          <div
-            class="pdf-zoom-wrap"
-            id="pdfZoomWrap"
-          >
-
-            <article
-              class="pdf-page"
-              aria-label="Document page preview"
-            >
-
-              <div class="pdf-top">
-
-                <div class="pdf-brand">
-                  NORTHSTAR PROFESSIONAL SERVICES
-                </div>
-
-                <div class="pdf-meta">
-                  VENDOR SERVICE AGREEMENT
-                  <br>
-                  Agreement No. NSA-2026-017
-                  <br>
-                  Effective: 04 September 2026
-                </div>
-
-              </div>
-
-
-              <div class="pdf-title">
-                SERVICE FEES &amp; PAYMENT TERMS
-              </div>
-
-              <div class="pdf-subtitle">
-                Commercial Agreement • Schedule B • Page 7 of 18
-              </div>
-
-
-              <div class="pdf-section">
-                4. Compensation and Payment Schedule
-              </div>
-
-
-              <p class="pdf-p">
-                The Customer shall pay the Provider the professional service
-                fees specified in this agreement in accordance with the
-                deliverables and milestone acceptance protocol.
-              </p>
-
-
-              <p class="pdf-p">
-                <strong>4.1 Service Fees.</strong>
-                The total contract value for the services described herein is
-                <strong>₹4,50,000</strong>, exclusive of applicable taxes
-                unless otherwise stated.
-              </p>
-
-
-              <p class="pdf-p">
-
-                <strong>4.2 Invoicing and Payment Terms.</strong>
-
-                All invoices shall be transmitted digitally.
-
-                <span
-                  class="highlight"
-                  id="pdfHighlight"
-                >
-                  The purchaser shall make payment within 30 days of receiving
-                  the invoice
-
-                  <span class="anchor-tag">
-                    ⌖ Evidence linked
-                  </span>
-
-                </span>
-
-                duly submitted upon milestone acceptance.
-
-              </p>
-
-
-              <div class="clause-box">
-
-                <strong>
-                  Traceable obligation:
-                </strong>
-
-                Payment deadline = 30 days from receipt of the invoice.
-
-                DocTrace links this extracted value to the source page and
-                clause instead of presenting it as an unsupported summary.
-
-              </div>
-
-
-              <table class="pdf-table">
-
-                <thead>
-
-                  <tr>
-                    <th>Item</th>
-                    <th>Extracted value</th>
-                    <th>Source</th>
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  <tr>
-                    <td>Contract value</td>
-                    <td id="pdfAmount">₹4,50,000</td>
-                    <td>Section 4.1</td>
-                  </tr>
-
-                  <tr>
-                    <td>Payment term</td>
-                    <td id="pdfDeadline">Net 30</td>
-                    <td>Section 4.2</td>
-                  </tr>
-
-                </tbody>
-
-              </table>
-
-
-              <p class="pdf-p">
-
-                <strong>4.3 Taxes.</strong>
-
-                Applicable taxes, duties, and statutory levies shall be
-                calculated at the prevailing rates for the jurisdiction
-                of performance.
-
-              </p>
-
-
-              <div class="pdf-footer">
-
-                <span>
-                  DocTrace evidence preview • source page 7
-                </span>
-
-                <span>
-                  7 / 18
-                </span>
-
-              </div>
-
-            </article>
-
-          </div>
-
+        <div class="viewer-stage" id="viewerStage">
+          <div id="pdfViewerContainer" class="w-100"></div>
         </div>
+
+
 
       </section>
 
@@ -1360,7 +1239,7 @@
         </div>
 
         <span class="mode-badge">
-          AI ANALYSIS
+          SOURCE-TEXT LOOKUP
         </span>
 
       </div>
@@ -1487,6 +1366,8 @@
           Review the highlighted clause before relying on the extracted value.
         </p>
 
+        <p class="small text-secondary mt-3">DocTrace is an automated review aid, not legal advice. Extraction and rule-based checks can miss or misread content. Confidence scores are heuristic estimates, not calibrated probabilities. Verify results in the original PDF and consult a qualified lawyer for legal decisions. Do not upload confidential documents; this demo has no user accounts or document deletion control.</p>
+
       </article>
 
     </section>
@@ -1515,7 +1396,8 @@
   </main>
 
 
-  <script src="js/app.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js?v=pdf-preview-20260926-3"></script>
 
 </body>
 </html>
