@@ -6,6 +6,14 @@ DocTrace is a PDF document review demo. It extracts selected dates, payment peri
 
 DocTrace uses a rule-based FastAPI backend. It does not require Ollama or an AI model. Its outputs are an aid to human review, not legal advice or a substitute for checking the original document.
 
+## Live deployment
+
+- **Frontend:** [https://doc-trace-ten.vercel.app/](https://doc-trace-ten.vercel.app/)
+- **Backend API:** [https://doctrace-backend.onrender.com/](https://doctrace-backend.onrender.com/)
+- **Interactive API docs:** [https://doctrace-backend.onrender.com/docs](https://doctrace-backend.onrender.com/docs)
+
+The Render free service may take 50 seconds or more to wake after inactivity.
+
 ## What it does
 
 - Accepts PDF uploads and redirects users to a dashboard with results for that PDF.
